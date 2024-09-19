@@ -1,0 +1,26 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:uiTestContent="clr-namespace:TemplatedControlLoadBug">
+    <Style Selector="uiTestContent|MagicTemplatedControl">
+        <Style Selector="^ /template/ Button">
+            <Setter Property="BorderBrush">
+                <SolidColorBrush Color="Red"/>
+            </Setter>
+            <Setter Property="Width" Value="150"/>
+            <Setter Property="Height" Value="40"/>
+        </Style>
+    </Style>
+
+    <Style Selector="uiTestContent|MagicTemplatedControl">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border BorderThickness="2" BorderBrush="Blue">
+                    <StackPanel>
+                        <Button>HUEBR</Button>
+                        <ContentPresenter Content="{TemplateBinding Content}" />
+                    </StackPanel>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

@@ -11,8 +11,8 @@
             <Border Width="200" Height="200" Name="MagicContent">
                 
             </Border>
-            <Panel Width="100" Height="100" Background="Brown"/>
             <Button Click="Button_OnClick">Click me for the bug</Button>
+            <Button Click="Button2_OnClick">Click me for no bug</Button>
         </StackPanel>
     </Grid>
 </Window>

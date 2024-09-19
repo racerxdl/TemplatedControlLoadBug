@@ -12,43 +12,23 @@ namespace TemplatedControlLoadBug;
 
 public partial class MainWindow : Window
 {
-    private Harmony? _harmony;
-    
+    private bool reproduceBug = false;
     public MainWindow()
     {
-        _harmony = new Harmony("DEADBEEF");
         var bitmap = new Bitmap(AssetLoader.Open(new Uri("avares://TemplatedControlLoadBug/578310.jpg")));
         Resources["TestImage"] = bitmap;
         InitializeComponent();
-        HookStyleLoading(Assembly.GetAssembly(GetType())!);
     }
 
-    private void HookStyleLoading(Assembly assembly)
-    {
-        var avaloniaResourcesType = assembly.GetType("CompiledAvaloniaXaml.!AvaloniaResources");
-        var originalMethod = AccessTools.Method(avaloniaResourcesType, "Build:/TestingStyle.axaml");
-        var newMethod = SymbolExtensions.GetMethodInfo((MethodInfo __originalMethod, Styles __result) =>
-            HandleStyleLoadOverride(__originalMethod, ref __result));
-
-        try
-        {
-            _harmony!.Patch(originalMethod, postfix: new HarmonyMethod(newMethod));
-        }
-        catch (SystemException e)
-        {
-            Console.WriteLine($"Error while hooking style: {e}");
-        }
-    }
-    
-    private static void HandleStyleLoadOverride(MethodInfo __originalMethod, ref Styles __result)
-    {
-        var assembly = __originalMethod.Module.Assembly;
-        var avaUri = new Uri("avares://TemplatedControlLoadBug/TestingStyle.axaml");
-        __result = (Styles)AvaloniaRuntimeXamlLoader.Load(changedStyleData, assembly, __result, avaUri);
-    }
-    
     private void Button_OnClick(object? sender, RoutedEventArgs e)
     {
+        reproduceBug = true;
+        RefreshControl();
+    }
+
+    private void RefreshControl()
+    {
+        
         var axamlData = @"<UserControl xmlns=""https://github.com/avaloniaui""
              xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml""
              xmlns:d=""http://schemas.microsoft.com/expression/blend/2008""
@@ -65,6 +45,15 @@ public partial class MainWindow : Window
         var assembly = Assembly.GetAssembly(GetType());
         var uri = new Uri("avares://TemplatedControlLoadBug/TestingControl.axaml");
         var obj = AvaloniaRuntimeXamlLoader.Load(axamlData, assembly, MagicContent.Child, uri) as Control;
+
+        if (reproduceBug)
+        {
+            obj!.Styles.Clear();
+            var avaUri = new Uri("avares://TemplatedControlLoadBug/TestingStyle.axaml");
+            var styleData = (Styles)AvaloniaRuntimeXamlLoader.Load(changedStyleData, assembly, null, avaUri);
+            obj.Styles.AddRange(styleData);
+        }
+
         MagicContent.Child = obj;
     }
     
@@ -84,13 +73,7 @@ public partial class MainWindow : Window
                   <Setter Property="Height" Value="40"/>
               </Style>
           </Style>
-          
-          <Style Selector="Panel">
-              <Setter Property="Background">
-                  <ImageBrush Source="{DynamicResource TestImage}"></ImageBrush>
-              </Setter>
-          </Style>
-      
+            
           <Style Selector="uiTestContent|MagicTemplatedControl">
               <Setter Property="Template">
                   <ControlTemplate>
@@ -105,4 +88,10 @@ public partial class MainWindow : Window
           </Style>
       </Styles>
       """;
+
+    private void Button2_OnClick(object? sender, RoutedEventArgs e)
+    {
+        reproduceBug = false;
+        RefreshControl();
+    }
 }
